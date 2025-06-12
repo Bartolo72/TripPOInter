@@ -16,6 +16,23 @@ class POI:
     website: Optional[str] = None
     phone: Optional[str] = None
     source: str = "unknown"
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def add_metadata(self, key: str, value: Any) -> None:
+        """Add or update a metadata field."""
+        self.metadata[key] = value
+
+    def get_metadata(self, key: str, default: Any = None) -> Any:
+        """Get a metadata field value."""
+        return self.metadata.get(key, default)
+
+    def remove_metadata(self, key: str) -> None:
+        """Remove a metadata field."""
+        self.metadata.pop(key, None)
+
+    def has_metadata(self, key: str) -> bool:
+        """Check if a metadata field exists."""
+        return key in self.metadata
 
 
 @dataclass

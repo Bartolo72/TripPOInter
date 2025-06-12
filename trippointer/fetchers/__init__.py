@@ -2,13 +2,18 @@ import importlib
 import inspect
 import os
 from pathlib import Path
-from typing import Type
+from typing import Type, Any, Dict, Optional, TYPE_CHECKING
 
-from ..core import TripPOInter
+if TYPE_CHECKING:
+    from ..core import TripPOInter
+    from ..models import POI
 
 
 class TripPOFetcher:
-    def __init__(self: "TripPOFetcher", trippointer: TripPOInter) -> None:
+    name: str = "base_fetcher"
+    is_base_fetcher: bool = False
+
+    def __init__(self: "TripPOFetcher", trippointer: "TripPOInter") -> None:
         self.trippointer = trippointer
         self.city_name = trippointer.city_name
         self.country_name = trippointer.country_name
@@ -16,7 +21,15 @@ class TripPOFetcher:
         self.end_date = trippointer.end_date
         self.output_file = trippointer.output_file
 
-    def fetch(self) -> None:
+    def fetch(self, poi: Optional["POI"] = None) -> Dict[str, Any]:
+        """Fetch additional information for a POI.
+
+        Args:
+            poi: The POI to fetch information for
+
+        Returns:
+            Dictionary containing additional information about the POI
+        """
         raise NotImplementedError("Subclasses must implement fetch()")
 
 
@@ -25,20 +38,16 @@ def get_all_fetchers() -> list[Type[TripPOFetcher]]:
     fetchers = []
     fetchers_dir = Path(__file__).parent
 
-    # Get all .py files in the fetchers directory
     for file in fetchers_dir.glob("*.py"):
-        if file.name == "__init__.py":
+        if file.name in ["__init__.py"]:
             continue
 
-        # Convert file path to module path
         module_name = file.stem
         module_path = f"{__package__}.{module_name}"
 
         try:
-            # Import the module
             module = importlib.import_module(module_path)
 
-            # Find all classes in the module that inherit from TripPOFetcher
             for name, obj in inspect.getmembers(module):
                 if (
                     inspect.isclass(obj)
